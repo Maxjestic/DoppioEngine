@@ -1,15 +1,14 @@
 ﻿# --- 1. Project Setup (C++23) ---
-cmake_minimum_required(VERSION 3.20)
-project(DoppioEngine VERSION 0.1.0)
+cmake_minimum_required(VERSION 4.1.2)
 
-# Set the C++ standard to C++23
+project(DoppioEngine VERSION 0.1.0 LANGUAGES CXX C)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Include the FetchContent module
+# --- 2. Fetch Dependencies (GLFW & GLM only) ---
 include(FetchContent)
 
-# --- 2. Fetch Dependencies (GLFW & GLM only) ---
 FetchContent_Declare(
         glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
@@ -25,7 +24,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glm)
 
 # --- 3. Configure GLAD (from local files) ---
-add_library(glad
+add_library(glad STATIC
         Source/ThirdParty/glad/src/glad.c
 )
 
@@ -37,20 +36,29 @@ target_include_directories(glad
 # --- 4. Build Our Engine ---
 add_executable(DoppioEngine
         Source/main.cpp
+
+        # Dear ImGui Core
+        Source/ThirdParty/imgui/imgui.cpp
+        Source/ThirdParty/imgui/imgui_demo.cpp
+        Source/ThirdParty/imgui/imgui_draw.cpp
+        Source/ThirdParty/imgui/imgui_tables.cpp
+        Source/ThirdParty/imgui/imgui_widgets.cpp
+
+        # Dear ImGui Backends
+        Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
+        Source/ThirdParty/imgui/backends/imgui_impl_opengl3.cpp
 )
 
 # --- 5. Link Libraries ---
+target_include_directories(DoppioEngine
+        PRIVATE
+        Source/ThirdParty/imgui
+        Source/ThirdParty/imgui/backends
+)
+
 target_link_libraries(DoppioEngine
-        PUBLIC
+        PRIVATE
         glfw
         glm
         glad
 )
-
-# On macOS
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    target_link_libraries(DoppioEngine
-            PRIVATE
-            "-framework OpenGL"
-    )
-endif ()

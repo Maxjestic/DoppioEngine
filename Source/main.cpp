@@ -2,6 +2,10 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 int main()
 {
     if (!glfwInit())
@@ -10,15 +14,11 @@ int main()
         return -1;
     }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    GLFWwindow* window = glfwCreateWindow(800, 600, "MyGameEngine", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "DoppioEngine", nullptr, nullptr);
     if (window == nullptr)
     {
         std::cerr << "Failed to create GLFW window\n";
@@ -27,30 +27,68 @@ int main()
     }
     glfwMakeContextCurrent(window);
 
-    if (!gladLoadGL())
+    int version = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
+    if (version == 0)
     {
         std::cerr << "Failed to initialize GLAD\n";
         return -1;
     }
 
-    glViewport(0, 0, 800, 600);
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
 
-    std::cout << "Hello from C++23!\n";
-    std::cout << "Initialized OpenGL Version: " << glGetString(GL_VERSION) << "\n";
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+    ImGui::StyleColorsDark();
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        style.WindowRounding = 2.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 430 core");
 
     while (!glfwWindowShouldClose(window))
     {
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
+        glfwPollEvents();
 
-        glClearColor(0.1f, 0.1f, 0.15f, 1.0f); // Dark grey
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::DockSpaceOverViewport();
+        ImGui::ShowDemoWindow();
+        ImGui::Render();
+
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            GLFWwindow* backup_current_context = glfwGetCurrentContext();
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+            glfwMakeContextCurrent(backup_current_context);
+        }
+
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
     return 0;
 }
