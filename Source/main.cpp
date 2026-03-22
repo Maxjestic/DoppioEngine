@@ -1,8 +1,6 @@
 ﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
 #include <print>
-#include <format>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -12,7 +10,7 @@ int main()
 {
 	if ( !glfwInit() )
 	{
-		std::cerr << "Failed to initialize GLFW\n";
+		std::println(stderr, "Failed to initialize GLFW");
 		return -1;
 	}
 
@@ -23,7 +21,7 @@ int main()
 	GLFWwindow *window = glfwCreateWindow(1280, 720, "DoppioEngine", nullptr, nullptr);
 	if ( window == nullptr )
 	{
-		std::cerr << "Failed to create GLFW window\n";
+		std::println(stderr, "Failed to create GLFW window");
 		glfwTerminate();
 		return -1;
 	}
@@ -32,7 +30,7 @@ int main()
 	int version = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
 	if ( version == 0 )
 	{
-		std::cerr << "Failed to initialize GLAD\n";
+		std::println(stderr, "Failed to initialize GLAD");
 		return -1;
 	}
 
