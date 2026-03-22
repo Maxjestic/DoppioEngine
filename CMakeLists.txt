@@ -61,4 +61,5 @@ target_link_libraries(DoppioEngine
         glfw
         glm
         glad
+        stdc++exp
 )
