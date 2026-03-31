@@ -1,10 +1,64 @@
-﻿#include <glad/glad.h>
+﻿#include <fstream>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <print>
+#include <sstream>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
+struct ShaderProgramSource
+{
+	std::string VertexSource;
+	std::string FragmentSource;
+};
+
+static ShaderProgramSource ParseShader( const std::string& Filepath )
+{
+	std::ifstream File( Filepath );
+
+	if ( !File.is_open() )
+	{
+		std::println( stderr, "ERROR: Could not open shader file at: {}", Filepath );
+		return { "", "" };
+	}
+
+	enum class ShaderType
+	{
+		NONE = -1,
+		VERTEX = 0,
+		FRAGMENT = 1
+	};
+
+	std::string Line;
+	std::stringstream StringStream[2];
+	ShaderType ShaderType = ShaderType::NONE;
+	while ( getline( File, Line ) )
+	{
+		if ( Line.find( "#shader" ) != std::string::npos )
+		{
+			if ( Line.find( "vertex" ) != std::string::npos )
+			{
+				ShaderType = ShaderType::VERTEX;
+			}
+			else if ( Line.find( "fragment" ) != std::string::npos )
+			{
+				ShaderType = ShaderType::FRAGMENT;
+			}
+		}
+		else
+		{
+			StringStream[static_cast<int>(ShaderType)] << Line << '\n';
+		}
+	}
+
+	ShaderProgramSource Shader;
+	Shader.VertexSource = StringStream[static_cast<int>(ShaderType::VERTEX)].str();
+	Shader.FragmentSource = StringStream[static_cast<int>(ShaderType::FRAGMENT)].str();
+
+	return Shader;
+}
 
 static unsigned int CompileShader( const unsigned int ShaderType, const std::string& ShaderCode )
 {
@@ -116,28 +170,9 @@ int main()
 	glEnableVertexAttribArray( 0 );
 	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 2, nullptr );
 
-	const std::string VertexShader =
-			"#version 430 core\n"
-			"\n"
-			"layout(location = 0) in vec4 position;\n"
-			"\n"
-			"void main()\n"
-			"{\n"
-			"	gl_Position = position;\n"
-			"}\n";
+	const ShaderProgramSource ShaderSource = ParseShader( "Resources/Shaders/Basic.shader" );
 
-	const std::string FragmentShader =
-			"#version 430 core\n"
-			"\n"
-			"layout(location = 0) out vec4 color;\n"
-			"\n"
-			"void main()\n"
-			"{\n"
-			"	color = vec4(1.0, 0.0, 0.0, 1.0);\n"
-			"}\n";
-
-	const unsigned int Shader = CreateShader( VertexShader, FragmentShader );
-
+	const unsigned int Shader = CreateShader( ShaderSource.VertexSource, ShaderSource.FragmentSource );
 	glUseProgram( Shader );
 
 	while ( !glfwWindowShouldClose( window ) )
@@ -153,6 +188,8 @@ int main()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+
+	glDeleteProgram( Shader );
 
 	glfwDestroyWindow( window );
 	glfwTerminate();
