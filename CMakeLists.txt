@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 4.1.2)
 
 project(DoppioEngine VERSION 0.1.0 LANGUAGES CXX C)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -38,6 +39,12 @@ add_executable(DoppioEngine
         Source/main.cpp
 
         # Dear ImGui Core
+        Source/ThirdParty/imgui/imconfig.h
+        Source/ThirdParty/imgui/imgui.h
+        Source/ThirdParty/imgui/imgui_internal.h
+        Source/ThirdParty/imgui/imstb_rectpack.h
+        Source/ThirdParty/imgui/imstb_textedit.h
+        Source/ThirdParty/imgui/imstb_truetype.h
         Source/ThirdParty/imgui/imgui.cpp
         Source/ThirdParty/imgui/imgui_demo.cpp
         Source/ThirdParty/imgui/imgui_draw.cpp
@@ -47,6 +54,9 @@ add_executable(DoppioEngine
         # Dear ImGui Backends
         Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
         Source/ThirdParty/imgui/backends/imgui_impl_opengl3.cpp
+        
+        # Debugger Visualizer
+        Source/ThirdParty/imgui/imgui.natvis
 )
 
 # --- 5. Link Libraries ---
@@ -61,5 +71,8 @@ target_link_libraries(DoppioEngine
         glfw
         glm
         glad
-        stdc++exp
 )
+
+if (MSVC)
+    target_compile_options(DoppioEngine PRIVATE /std:c++latest /EHsc)
+endif()
