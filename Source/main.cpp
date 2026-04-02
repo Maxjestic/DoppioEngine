@@ -8,8 +8,106 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+
 namespace
 {
+	void APIENTRY GLDebugMessageCallback( GLenum InSource, GLenum InType, GLuint Id,
+	                                      GLenum InSeverity, GLsizei Length,
+	                                      const GLchar* Message, const void* Data )
+	{
+		const char* Source;
+		const char* Type;
+		const char* Severity;
+
+		switch ( InSource )
+		{
+		case GL_DEBUG_SOURCE_API:
+			Source = "API";
+			break;
+
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+			Source = "WINDOW SYSTEM";
+			break;
+
+		case GL_DEBUG_SOURCE_SHADER_COMPILER:
+			Source = "SHADER COMPILER";
+			break;
+
+		case GL_DEBUG_SOURCE_THIRD_PARTY:
+			Source = "THIRD PARTY";
+			break;
+
+		case GL_DEBUG_SOURCE_APPLICATION:
+			Source = "APPLICATION";
+			break;
+
+		default:
+		case GL_DEBUG_SOURCE_OTHER:
+			Source = "UNKNOWN";
+			break;
+		}
+
+		switch ( InType )
+		{
+		case GL_DEBUG_TYPE_ERROR:
+			Type = "ERROR";
+			break;
+
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+			Type = "DEPRECATED BEHAVIOR";
+			break;
+
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+			Type = "UNDEFINED BEHAVIOR";
+			break;
+
+		case GL_DEBUG_TYPE_PORTABILITY:
+			Type = "PORTABILITY";
+			break;
+
+		case GL_DEBUG_TYPE_PERFORMANCE:
+			Type = "PERFORMANCE";
+			break;
+
+		case GL_DEBUG_TYPE_OTHER:
+			Type = "OTHER";
+			break;
+
+		case GL_DEBUG_TYPE_MARKER:
+			Type = "MARKER";
+			break;
+
+		default:
+			Type = "UNKNOWN";
+			break;
+		}
+
+		switch ( InSeverity )
+		{
+		case GL_DEBUG_SEVERITY_HIGH:
+			Severity = "HIGH";
+			break;
+
+		case GL_DEBUG_SEVERITY_MEDIUM:
+			Severity = "MEDIUM";
+			break;
+
+		case GL_DEBUG_SEVERITY_LOW:
+			Severity = "LOW";
+			break;
+
+		case GL_DEBUG_SEVERITY_NOTIFICATION:
+			Severity = "NOTIFICATION";
+			break;
+
+		default:
+			Severity = "UNKNOWN";
+			break;
+		}
+
+		std::println( stderr, "{}: {} of {} severity, raised from {}: {}", Id, Type, Severity, Source, Message );
+	}
+
 	struct ShaderProgramSource
 	{
 		std::string VertexSource;
@@ -120,6 +218,7 @@ int main()
 	glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
 	glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 3 );
 	glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+	glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE );
 
 	GLFWwindow* Window = glfwCreateWindow( 1280, 720, "DoppioEngine", nullptr, nullptr );
 	if ( Window == nullptr )
@@ -140,6 +239,10 @@ int main()
 		std::println( stderr, "Failed to initialize GLAD" );
 		return -1;
 	}
+
+	glEnable( GL_DEBUG_OUTPUT );
+	glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
+	glDebugMessageCallback( GLDebugMessageCallback, nullptr );
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -200,6 +303,7 @@ int main()
 	while ( !glfwWindowShouldClose( Window ) )
 	{
 		glClear( GL_COLOR_BUFFER_BIT );
+
 		glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr );
 
 		glfwSwapBuffers( Window );
