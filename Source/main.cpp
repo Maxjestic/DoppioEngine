@@ -1,107 +1,112 @@
 ﻿#include <fstream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <print>
 #include <sstream>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-struct ShaderProgramSource
+namespace
 {
-	std::string VertexSource;
-	std::string FragmentSource;
-};
-
-static ShaderProgramSource ParseShader( const std::string& Filepath )
-{
-	std::ifstream File( Filepath );
-
-	if ( !File.is_open() )
+	struct ShaderProgramSource
 	{
-		std::println( stderr, "ERROR: Could not open shader file at: {}", Filepath );
-		return { "", "" };
-	}
-
-	enum class ShaderType
-	{
-		NONE = -1,
-		VERTEX = 0,
-		FRAGMENT = 1
+		std::string VertexSource;
+		std::string FragmentSource;
 	};
 
-	std::string Line;
-	std::stringstream StringStream[2];
-	ShaderType ShaderType = ShaderType::NONE;
-	while ( getline( File, Line ) )
+	ShaderProgramSource ParseShader( const std::string& Filepath )
 	{
-		if ( Line.find( "#shader" ) != std::string::npos )
+		std::ifstream File( Filepath );
+
+		if ( !File.is_open() )
 		{
-			if ( Line.find( "vertex" ) != std::string::npos )
+			std::println( stderr, "ERROR: Could not open shader file at: {}", Filepath );
+			return { "", "" };
+		}
+
+		enum class ShaderType : int8_t
+		{
+			None = -1,
+			Vertex = 0,
+			Fragment = 1
+		};
+
+		std::string Line;
+		std::stringstream StringStream[2];
+		ShaderType ShaderType = ShaderType::None;
+		while ( getline( File, Line ) )
+		{
+			if ( Line.find( "#shader" ) != std::string::npos )
 			{
-				ShaderType = ShaderType::VERTEX;
+				if ( Line.find( "vertex" ) != std::string::npos )
+				{
+					ShaderType = ShaderType::Vertex;
+				}
+				else if ( Line.find( "fragment" ) != std::string::npos )
+				{
+					ShaderType = ShaderType::Fragment;
+				}
 			}
-			else if ( Line.find( "fragment" ) != std::string::npos )
+			else
 			{
-				ShaderType = ShaderType::FRAGMENT;
+				StringStream[static_cast<int>(ShaderType)] << Line << '\n';
 			}
 		}
-		else
-		{
-			StringStream[static_cast<int>(ShaderType)] << Line << '\n';
-		}
+
+		ShaderProgramSource Shader;
+		Shader.VertexSource = StringStream[static_cast<int>(ShaderType::Vertex)].str();
+		Shader.FragmentSource = StringStream[static_cast<int>(ShaderType::Fragment)].str();
+
+		return Shader;
 	}
 
-	ShaderProgramSource Shader;
-	Shader.VertexSource = StringStream[static_cast<int>(ShaderType::VERTEX)].str();
-	Shader.FragmentSource = StringStream[static_cast<int>(ShaderType::FRAGMENT)].str();
-
-	return Shader;
-}
-
-static unsigned int CompileShader( const unsigned int ShaderType, const std::string& ShaderCode )
-{
-	const unsigned int VertexShaderID = glCreateShader( ShaderType );
-	const char* SourcePointer = ShaderCode.c_str();
-	glShaderSource( VertexShaderID, 1, &SourcePointer, nullptr );
-	glCompileShader( VertexShaderID );
-
-	int Result;
-	glGetShaderiv( VertexShaderID, GL_COMPILE_STATUS, &Result );
-	if ( Result == GL_FALSE )
+	unsigned int CompileShader( const unsigned int ShaderType, const std::string& ShaderCode )
 	{
-		int Length;
-		glGetShaderiv( VertexShaderID, GL_INFO_LOG_LENGTH, &Length );
+		const unsigned int VertexShaderId = glCreateShader( ShaderType );
+		const char* SourcePointer = ShaderCode.c_str();
+		glShaderSource( VertexShaderId, 1, &SourcePointer, nullptr );
+		glCompileShader( VertexShaderId );
 
-		auto InfoLog = static_cast<char*>(alloca( Length*sizeof(char) ));
-		glGetShaderInfoLog( VertexShaderID, Length, &Length, InfoLog );
+		int Result;
+		glGetShaderiv( VertexShaderId, GL_COMPILE_STATUS, &Result );
+		if ( Result == GL_FALSE )
+		{
+			int Length;
+			glGetShaderiv( VertexShaderId, GL_INFO_LOG_LENGTH, &Length );
 
-		std::println( stderr, "Failed to compile {} shader: {}",
-		              ( ShaderType == GL_VERTEX_SHADER ? "vertex" : "fragment" ), InfoLog );
+			auto InfoLog = static_cast<char*>(alloca( Length * sizeof( char ) ));
+			glGetShaderInfoLog( VertexShaderId, Length, &Length, InfoLog );
 
-		glDeleteShader( VertexShaderID );
-		return 0;
+			std::println( stderr,
+			              "Failed to compile {} shader: {}",
+			              ( ShaderType == GL_VERTEX_SHADER ? "vertex" : "fragment" ),
+			              InfoLog );
+
+			glDeleteShader( VertexShaderId );
+			return 0;
+		}
+
+		return VertexShaderId;
 	}
 
-	return VertexShaderID;
-}
+	unsigned int CreateShader( const std::string& VertexShader, const std::string& FragmentShader )
+	{
+		const unsigned int ProgramId = glCreateProgram();
+		const unsigned int VertexShaderId = CompileShader( GL_VERTEX_SHADER, VertexShader );
+		const unsigned int FragmentShaderId = CompileShader( GL_FRAGMENT_SHADER, FragmentShader );
 
-static unsigned int CreateShader( const std::string& VertexShader, const std::string& FragmentShader )
-{
-	const unsigned int ProgramID = glCreateProgram();
-	const unsigned int VertexShaderID = CompileShader( GL_VERTEX_SHADER, VertexShader );
-	const unsigned int FragmentShaderID = CompileShader( GL_FRAGMENT_SHADER, FragmentShader );
+		glAttachShader( ProgramId, VertexShaderId );
+		glAttachShader( ProgramId, FragmentShaderId );
+		glLinkProgram( ProgramId );
+		glValidateProgram( ProgramId );
 
-	glAttachShader( ProgramID, VertexShaderID );
-	glAttachShader( ProgramID, FragmentShaderID );
-	glLinkProgram( ProgramID );
-	glValidateProgram( ProgramID );
+		glDeleteShader( VertexShaderId );
+		glDeleteShader( FragmentShaderId );
 
-	glDeleteShader( VertexShaderID );
-	glDeleteShader( FragmentShaderID );
-
-	return ProgramID;
+		return ProgramId;
+	}
 }
 
 int main()
@@ -116,17 +121,21 @@ int main()
 	glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 3 );
 	glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
-	GLFWwindow* window = glfwCreateWindow( 1280, 720, "DoppioEngine", nullptr, nullptr );
-	if ( window == nullptr )
+	GLFWwindow* Window = glfwCreateWindow( 1280, 720, "DoppioEngine", nullptr, nullptr );
+	if ( Window == nullptr )
 	{
 		std::println( stderr, "Failed to create GLFW window" );
 		glfwTerminate();
 		return -1;
 	}
-	glfwMakeContextCurrent( window );
+	glfwMakeContextCurrent( Window );
 
-	int version = gladLoadGLLoader( reinterpret_cast<GLADloadproc>(glfwGetProcAddress) );
-	if ( version == 0 )
+	const int Version = gladLoadGLLoader( []( const char* Name ) -> void*
+	{
+		return reinterpret_cast<void*>(glfwGetProcAddress( Name ));
+	} );
+
+	if ( Version == 0 )
 	{
 		std::println( stderr, "Failed to initialize GLAD" );
 		return -1;
@@ -134,38 +143,39 @@ int main()
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
 
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	ImGuiIO& InOut = ImGui::GetIO();
+
+	InOut.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	InOut.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	InOut.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 	ImGui::StyleColorsDark();
 
-	ImGuiStyle& style = ImGui::GetStyle();
-	if ( io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable )
+	ImGuiStyle& Style = ImGui::GetStyle();
+	if ( InOut.ConfigFlags & ImGuiConfigFlags_ViewportsEnable )
 	{
-		style.WindowRounding = 2.0f;
-		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+		Style.WindowRounding = 2.0f;
+		Style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 	}
 
-	ImGui_ImplGlfw_InitForOpenGL( window, true );
+	ImGui_ImplGlfw_InitForOpenGL( Window, true );
 	ImGui_ImplOpenGL3_Init( "#version 430 core" );
 
-	float positions[6] = {
+	constexpr float Positions[6] = {
 		-0.5, -0.5,
 		0.0f, 0.5f,
 		0.5f, -0.5f
 	};
 
-	unsigned int VAO;
-	glGenVertexArrays( 1, &VAO );
-	glBindVertexArray( VAO );
+	unsigned int VertexArray;
+	glGenVertexArrays( 1, &VertexArray );
+	glBindVertexArray( VertexArray );
 
-	unsigned int buffer;
-	glGenBuffers( 1, &buffer );
-	glBindBuffer( GL_ARRAY_BUFFER, buffer );
-	glBufferData( GL_ARRAY_BUFFER, 6 * sizeof( float ), positions, GL_STATIC_DRAW );
+	unsigned int VertexBuffer;
+	glGenBuffers( 1, &VertexBuffer );
+	glBindBuffer( GL_ARRAY_BUFFER, VertexBuffer );
+	glBufferData( GL_ARRAY_BUFFER, 6 * sizeof( float ), Positions, GL_STATIC_DRAW );
 
 	glEnableVertexAttribArray( 0 );
 	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 2, nullptr );
@@ -175,23 +185,18 @@ int main()
 	const unsigned int Shader = CreateShader( ShaderSource.VertexSource, ShaderSource.FragmentSource );
 	glUseProgram( Shader );
 
-	while ( !glfwWindowShouldClose( window ) )
+	while ( !glfwWindowShouldClose( Window ) )
 	{
 		glClear( GL_COLOR_BUFFER_BIT );
 		glDrawArrays( GL_TRIANGLES, 0, 3 );
 
-		glfwSwapBuffers( window );
+		glfwSwapBuffers( Window );
 
 		glfwPollEvents();
 	}
 
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-
 	glDeleteProgram( Shader );
-
-	glfwDestroyWindow( window );
+	glfwDestroyWindow( Window );
 	glfwTerminate();
 
 	return 0;
