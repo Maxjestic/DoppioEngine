@@ -234,7 +234,7 @@ int main()
 	}
 
 	glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-	glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 3 );
+	glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 6 );
 	glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 	glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE );
 
@@ -283,7 +283,7 @@ int main()
 	}
 
 	ImGui_ImplGlfw_InitForOpenGL( Window, true );
-	ImGui_ImplOpenGL3_Init( "#version 430 core" );
+	ImGui_ImplOpenGL3_Init( "#version 460 core" );
 
 	constexpr float Positions[] = {
 		-0.5f, -0.5f,
