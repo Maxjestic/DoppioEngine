@@ -11,13 +11,19 @@
 
 namespace
 {
+	constexpr const char* ColorRed = "\x1b[31m";
+	constexpr const char* ColorYellow = "\x1b[33m";
+	constexpr const char* ColorMagenta = "\x1b[35m";
+	constexpr const char* ColorReset = "\x1b[0m";
+
 	void APIENTRY GLDebugMessageCallback( GLenum InSource, GLenum InType, GLuint Id,
 	                                      GLenum InSeverity, GLsizei Length,
 	                                      const GLchar* Message, const void* Data )
 	{
 		const char* Source;
 		const char* Type;
-		const char* Severity;
+		const char* CurrentColor;
+		FILE* OutputStream;
 
 		switch ( InSource )
 		{
@@ -85,27 +91,39 @@ namespace
 		switch ( InSeverity )
 		{
 		case GL_DEBUG_SEVERITY_HIGH:
-			Severity = "HIGH";
+			CurrentColor = ColorRed;
+			OutputStream = stderr;
 			break;
 
 		case GL_DEBUG_SEVERITY_MEDIUM:
-			Severity = "MEDIUM";
+			CurrentColor = ColorRed;
+			OutputStream = stderr;
 			break;
 
 		case GL_DEBUG_SEVERITY_LOW:
-			Severity = "LOW";
+			CurrentColor = ColorYellow;
+			OutputStream = stderr;
 			break;
 
 		case GL_DEBUG_SEVERITY_NOTIFICATION:
-			Severity = "NOTIFICATION";
+			CurrentColor = ColorReset;
+			OutputStream = stdout;
 			break;
 
 		default:
-			Severity = "UNKNOWN";
+			CurrentColor = ColorMagenta;
+			OutputStream = stderr;
 			break;
 		}
 
-		std::println( stderr, "{}: {} of {} severity, raised from {}: {}", Id, Type, Severity, Source, Message );
+		std::println( OutputStream,
+		              "{}{}: {}, raised from {}: {}{}",
+		              CurrentColor,
+		              Id,
+		              Type,
+		              Source,
+		              Message,
+		              ColorReset );
 	}
 
 	struct ShaderProgramSource
@@ -228,6 +246,8 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent( Window );
+	
+	glfwSwapInterval( 1 );
 
 	const int Version = gladLoadGLLoader( []( const char* Name ) -> void*
 	{
@@ -300,11 +320,29 @@ int main()
 	const unsigned int Shader = CreateShader( ShaderSource.VertexSource, ShaderSource.FragmentSource );
 	glUseProgram( Shader );
 
+	//const int Location = glGetUniformLocation( Shader, "u_Color" );
+	glUniform4f( 1, 0.8f, 0.3f, 0.8f, 1.0f );
+
+	float Red = 0.0f;
+	float Increment = 0.01f;
+	
 	while ( !glfwWindowShouldClose( Window ) )
 	{
 		glClear( GL_COLOR_BUFFER_BIT );
 
+		glUniform4f( 1, Red, 0.3f, 0.8f, 1.0f );
 		glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr );
+		
+		if (Red > 1.0f)
+		{
+			Increment = -0.01f;
+		}
+		else if (Red < 0.0f)
+		{
+			Increment = 0.01f;
+		}
+		
+		Red += Increment;
 
 		glfwSwapBuffers( Window );
 
