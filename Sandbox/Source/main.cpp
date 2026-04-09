@@ -218,6 +218,21 @@ namespace
 		glLinkProgram( ProgramId );
 		glValidateProgram( ProgramId );
 
+		int Result;
+		glGetProgramiv( ProgramId, GL_LINK_STATUS, &Result );
+		if ( Result == GL_FALSE )
+		{
+			int Length;
+			glGetProgramiv( ProgramId, GL_INFO_LOG_LENGTH, &Length );
+			auto InfoLog = static_cast<char*>(alloca( Length * sizeof( char ) ));
+			glGetProgramInfoLog( ProgramId, Length, &Length, InfoLog );
+			std::println( stderr, "Failed to link shader program: {}", InfoLog );
+			glDeleteProgram( ProgramId );
+			glDeleteShader( VertexShaderId );
+			glDeleteShader( FragmentShaderId );
+			return 0;
+		}
+
 		glDeleteShader( VertexShaderId );
 		glDeleteShader( FragmentShaderId );
 
@@ -246,7 +261,7 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent( Window );
-	
+
 	glfwSwapInterval( 1 );
 
 	const int Version = gladLoadGLLoader( []( const char* Name ) -> void*
@@ -315,7 +330,7 @@ int main()
 	glEnableVertexAttribArray( 0 );
 	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 2, nullptr );
 
-	const ShaderProgramSource ShaderSource = ParseShader( "Resources/Shaders/Basic.shader" );
+	const ShaderProgramSource ShaderSource = ParseShader( "Engine/Resources/Shaders/Basic.shader" );
 
 	const unsigned int Shader = CreateShader( ShaderSource.VertexSource, ShaderSource.FragmentSource );
 	glUseProgram( Shader );
@@ -325,23 +340,23 @@ int main()
 
 	float Red = 0.0f;
 	float Increment = 0.01f;
-	
+
 	while ( !glfwWindowShouldClose( Window ) )
 	{
 		glClear( GL_COLOR_BUFFER_BIT );
 
 		glUniform4f( 1, Red, 0.3f, 0.8f, 1.0f );
 		glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr );
-		
-		if (Red > 1.0f)
+
+		if ( Red > 1.0f )
 		{
 			Increment = -0.01f;
 		}
-		else if (Red < 0.0f)
+		else if ( Red < 0.0f )
 		{
 			Increment = 0.01f;
 		}
-		
+
 		Red += Increment;
 
 		glfwSwapBuffers( Window );
