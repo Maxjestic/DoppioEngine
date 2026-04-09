@@ -8,236 +8,125 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "Renderer/VertexBuffer.h"
+#include "Renderer/IndexBuffer.h"
+#include "Renderer/Renderer.h"
+
 
 namespace
 {
-	constexpr const char* ColorRed = "\x1b[31m";
-	constexpr const char* ColorYellow = "\x1b[33m";
-	constexpr const char* ColorMagenta = "\x1b[35m";
-	constexpr const char* ColorReset = "\x1b[0m";
+struct ShaderProgramSource
+{
+	std::string VertexSource;
+	std::string FragmentSource;
+};
 
-	void APIENTRY GLDebugMessageCallback( GLenum InSource, GLenum InType, GLuint Id,
-	                                      GLenum InSeverity, GLsizei Length,
-	                                      const GLchar* Message, const void* Data )
+ShaderProgramSource ParseShader( const std::string& Filepath )
+{
+	std::ifstream File( Filepath );
+
+	if ( !File.is_open() )
 	{
-		const char* Source;
-		const char* Type;
-		const char* CurrentColor;
-		FILE* OutputStream;
-
-		switch ( InSource )
-		{
-		case GL_DEBUG_SOURCE_API:
-			Source = "API";
-			break;
-
-		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-			Source = "WINDOW SYSTEM";
-			break;
-
-		case GL_DEBUG_SOURCE_SHADER_COMPILER:
-			Source = "SHADER COMPILER";
-			break;
-
-		case GL_DEBUG_SOURCE_THIRD_PARTY:
-			Source = "THIRD PARTY";
-			break;
-
-		case GL_DEBUG_SOURCE_APPLICATION:
-			Source = "APPLICATION";
-			break;
-
-		default:
-		case GL_DEBUG_SOURCE_OTHER:
-			Source = "UNKNOWN";
-			break;
-		}
-
-		switch ( InType )
-		{
-		case GL_DEBUG_TYPE_ERROR:
-			Type = "ERROR";
-			break;
-
-		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-			Type = "DEPRECATED BEHAVIOR";
-			break;
-
-		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-			Type = "UNDEFINED BEHAVIOR";
-			break;
-
-		case GL_DEBUG_TYPE_PORTABILITY:
-			Type = "PORTABILITY";
-			break;
-
-		case GL_DEBUG_TYPE_PERFORMANCE:
-			Type = "PERFORMANCE";
-			break;
-
-		case GL_DEBUG_TYPE_OTHER:
-			Type = "OTHER";
-			break;
-
-		case GL_DEBUG_TYPE_MARKER:
-			Type = "MARKER";
-			break;
-
-		default:
-			Type = "UNKNOWN";
-			break;
-		}
-
-		switch ( InSeverity )
-		{
-		case GL_DEBUG_SEVERITY_HIGH:
-			CurrentColor = ColorRed;
-			OutputStream = stderr;
-			break;
-
-		case GL_DEBUG_SEVERITY_MEDIUM:
-			CurrentColor = ColorRed;
-			OutputStream = stderr;
-			break;
-
-		case GL_DEBUG_SEVERITY_LOW:
-			CurrentColor = ColorYellow;
-			OutputStream = stderr;
-			break;
-
-		case GL_DEBUG_SEVERITY_NOTIFICATION:
-			CurrentColor = ColorReset;
-			OutputStream = stdout;
-			break;
-
-		default:
-			CurrentColor = ColorMagenta;
-			OutputStream = stderr;
-			break;
-		}
-
-		std::println( OutputStream,
-		              "{}{}: {}, raised from {}: {}{}",
-		              CurrentColor,
-		              Id,
-		              Type,
-		              Source,
-		              Message,
-		              ColorReset );
+		std::println( stderr, "ERROR: Could not open shader file at: {}", Filepath );
+		return { "", "" };
 	}
 
-	struct ShaderProgramSource
+	enum class ShaderType : int8_t
 	{
-		std::string VertexSource;
-		std::string FragmentSource;
+		None = -1,
+		Vertex = 0,
+		Fragment = 1
 	};
 
-	ShaderProgramSource ParseShader( const std::string& Filepath )
+	std::string Line;
+	std::stringstream StringStream[2];
+	ShaderType ShaderType = ShaderType::None;
+	while ( getline( File, Line ) )
 	{
-		std::ifstream File( Filepath );
-
-		if ( !File.is_open() )
+		if ( Line.find( "#shader" ) != std::string::npos )
 		{
-			std::println( stderr, "ERROR: Could not open shader file at: {}", Filepath );
-			return { "", "" };
-		}
-
-		enum class ShaderType : int8_t
-		{
-			None = -1,
-			Vertex = 0,
-			Fragment = 1
-		};
-
-		std::string Line;
-		std::stringstream StringStream[2];
-		ShaderType ShaderType = ShaderType::None;
-		while ( getline( File, Line ) )
-		{
-			if ( Line.find( "#shader" ) != std::string::npos )
+			if ( Line.find( "vertex" ) != std::string::npos )
 			{
-				if ( Line.find( "vertex" ) != std::string::npos )
-				{
-					ShaderType = ShaderType::Vertex;
-				}
-				else if ( Line.find( "fragment" ) != std::string::npos )
-				{
-					ShaderType = ShaderType::Fragment;
-				}
+				ShaderType = ShaderType::Vertex;
 			}
-			else
+			else if ( Line.find( "fragment" ) != std::string::npos )
 			{
-				StringStream[static_cast<int>(ShaderType)] << Line << '\n';
+				ShaderType = ShaderType::Fragment;
 			}
 		}
-
-		ShaderProgramSource Shader;
-		Shader.VertexSource = StringStream[static_cast<int>(ShaderType::Vertex)].str();
-		Shader.FragmentSource = StringStream[static_cast<int>(ShaderType::Fragment)].str();
-
-		return Shader;
+		else
+		{
+			StringStream[static_cast<int>(ShaderType)] << Line << '\n';
+		}
 	}
 
-	unsigned int CompileShader( const unsigned int ShaderType, const std::string& ShaderCode )
+	ShaderProgramSource Shader;
+	Shader.VertexSource = StringStream[static_cast<int>(ShaderType::Vertex)].str();
+	Shader.FragmentSource = StringStream[static_cast<int>(ShaderType::Fragment)].str();
+
+	return Shader;
+}
+
+unsigned int CompileShader( const unsigned int ShaderType, const std::string& ShaderCode )
+{
+	const unsigned int VertexShaderId = glCreateShader( ShaderType );
+	const char* SourcePointer = ShaderCode.c_str();
+	glShaderSource( VertexShaderId, 1, &SourcePointer, nullptr );
+	glCompileShader( VertexShaderId );
+
+	int Result;
+	glGetShaderiv( VertexShaderId, GL_COMPILE_STATUS, &Result );
+	if ( Result == GL_FALSE )
 	{
-		const unsigned int VertexShaderId = glCreateShader( ShaderType );
-		const char* SourcePointer = ShaderCode.c_str();
-		glShaderSource( VertexShaderId, 1, &SourcePointer, nullptr );
-		glCompileShader( VertexShaderId );
+		int Length;
+		glGetShaderiv( VertexShaderId, GL_INFO_LOG_LENGTH, &Length );
 
-		int Result;
-		glGetShaderiv( VertexShaderId, GL_COMPILE_STATUS, &Result );
-		if ( Result == GL_FALSE )
-		{
-			int Length;
-			glGetShaderiv( VertexShaderId, GL_INFO_LOG_LENGTH, &Length );
+		auto InfoLog = static_cast<char*>(alloca( Length * sizeof( char ) ));
+		glGetShaderInfoLog( VertexShaderId, Length, &Length, InfoLog );
 
-			auto InfoLog = static_cast<char*>(alloca( Length * sizeof( char ) ));
-			glGetShaderInfoLog( VertexShaderId, Length, &Length, InfoLog );
-
-			std::println( stderr,
-			              "Failed to compile {} shader: {}",
-			              ( ShaderType == GL_VERTEX_SHADER ? "vertex" : "fragment" ),
-			              InfoLog );
-
-			glDeleteShader( VertexShaderId );
-			return 0;
-		}
-
-		return VertexShaderId;
-	}
-
-	unsigned int CreateShader( const std::string& VertexShader, const std::string& FragmentShader )
-	{
-		const unsigned int ProgramId = glCreateProgram();
-		const unsigned int VertexShaderId = CompileShader( GL_VERTEX_SHADER, VertexShader );
-		const unsigned int FragmentShaderId = CompileShader( GL_FRAGMENT_SHADER, FragmentShader );
-
-		glAttachShader( ProgramId, VertexShaderId );
-		glAttachShader( ProgramId, FragmentShaderId );
-		glLinkProgram( ProgramId );
-		glValidateProgram( ProgramId );
-
-		int Result;
-		glGetProgramiv( ProgramId, GL_LINK_STATUS, &Result );
-		if ( Result == GL_FALSE )
-		{
-			int Length;
-			glGetProgramiv( ProgramId, GL_INFO_LOG_LENGTH, &Length );
-			auto InfoLog = static_cast<char*>(alloca( Length * sizeof( char ) ));
-			glGetProgramInfoLog( ProgramId, Length, &Length, InfoLog );
-			std::println( stderr, "Failed to link shader program: {}", InfoLog );
-			glDeleteProgram( ProgramId );
-			glDeleteShader( VertexShaderId );
-			glDeleteShader( FragmentShaderId );
-			return 0;
-		}
+		std::println( stderr,
+		              "Failed to compile {} shader: {}",
+		              ( ShaderType == GL_VERTEX_SHADER ? "vertex" : "fragment" ),
+		              InfoLog );
 
 		glDeleteShader( VertexShaderId );
-		glDeleteShader( FragmentShaderId );
-
-		return ProgramId;
+		return 0;
 	}
+
+	return VertexShaderId;
+}
+
+unsigned int CreateShader( const std::string& VertexShader, const std::string& FragmentShader )
+{
+	const unsigned int ProgramId = glCreateProgram();
+	const unsigned int VertexShaderId = CompileShader( GL_VERTEX_SHADER, VertexShader );
+	const unsigned int FragmentShaderId = CompileShader( GL_FRAGMENT_SHADER, FragmentShader );
+
+	glAttachShader( ProgramId, VertexShaderId );
+	glAttachShader( ProgramId, FragmentShaderId );
+	glLinkProgram( ProgramId );
+	glValidateProgram( ProgramId );
+
+	int Result;
+	glGetProgramiv( ProgramId, GL_LINK_STATUS, &Result );
+	if ( Result == GL_FALSE )
+	{
+		int Length;
+		glGetProgramiv( ProgramId, GL_INFO_LOG_LENGTH, &Length );
+		auto InfoLog = static_cast<char*>(alloca( Length * sizeof( char ) ));
+		glGetProgramInfoLog( ProgramId, Length, &Length, InfoLog );
+		std::println( stderr, "Failed to link shader program: {}", InfoLog );
+		glDeleteProgram( ProgramId );
+		glDeleteShader( VertexShaderId );
+		glDeleteShader( FragmentShaderId );
+		return 0;
+	}
+
+	glDeleteShader( VertexShaderId );
+	glDeleteShader( FragmentShaderId );
+
+	return ProgramId;
+}
 }
 
 int main()
@@ -275,9 +164,7 @@ int main()
 		return -1;
 	}
 
-	glEnable( GL_DEBUG_OUTPUT );
-	glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
-	glDebugMessageCallback( GLDebugMessageCallback, nullptr );
+	Doppio::Render::Renderer::Init();
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -317,15 +204,9 @@ int main()
 	glGenVertexArrays( 1, &VertexArray );
 	glBindVertexArray( VertexArray );
 
-	unsigned int VertexBuffer;
-	glGenBuffers( 1, &VertexBuffer );
-	glBindBuffer( GL_ARRAY_BUFFER, VertexBuffer );
-	glBufferData( GL_ARRAY_BUFFER, 8 * sizeof( float ), Positions, GL_STATIC_DRAW );
+	Doppio::Render::VertexBuffer VertexBuffer{ 4 * 2 * sizeof( float ), Positions };
 
-	unsigned int IndexBuffer;
-	glGenBuffers( 1, &IndexBuffer );
-	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, IndexBuffer );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof( unsigned int ), Indices, GL_STATIC_DRAW );
+	const Doppio::Render::IndexBuffer IndexBuffer{ 6, Indices };
 
 	glEnableVertexAttribArray( 0 );
 	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 2, nullptr );
@@ -333,10 +214,6 @@ int main()
 	const ShaderProgramSource ShaderSource = ParseShader( "Engine/Resources/Shaders/Basic.shader" );
 
 	const unsigned int Shader = CreateShader( ShaderSource.VertexSource, ShaderSource.FragmentSource );
-	glUseProgram( Shader );
-
-	//const int Location = glGetUniformLocation( Shader, "u_Color" );
-	glUniform4f( 1, 0.8f, 0.3f, 0.8f, 1.0f );
 
 	float Red = 0.0f;
 	float Increment = 0.01f;
@@ -345,7 +222,12 @@ int main()
 	{
 		glClear( GL_COLOR_BUFFER_BIT );
 
+		glUseProgram( Shader );
 		glUniform4f( 1, Red, 0.3f, 0.8f, 1.0f );
+
+		glBindVertexArray( VertexArray );
+		IndexBuffer.Bind();
+
 		glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr );
 
 		if ( Red > 1.0f )

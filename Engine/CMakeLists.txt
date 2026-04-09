@@ -51,6 +51,14 @@ add_library(DoppioEngine STATIC
 
         # Debugger Visualizer
         Source/ThirdParty/imgui/imgui.natvis
+
+        # DoppioEngine
+        Source/Renderer/Renderer.h
+        Source/Renderer/Renderer.cpp
+        Source/Renderer/VertexBuffer.h
+        Source/Renderer/VertexBuffer.cpp
+        Source/Renderer/IndexBuffer.h
+        Source/Renderer/IndexBuffer.cpp
 )
 
 # --- 4. Expose Engine API ---
