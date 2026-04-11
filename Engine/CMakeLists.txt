@@ -3,7 +3,7 @@
 ##################
 
 
-# --- 1. Fetch Dependencies (GLFW & GLM) ---
+# --- Fetch Dependencies (GLFW & GLM) ---
 include(FetchContent)
 
 FetchContent_Declare(
@@ -20,7 +20,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-# --- 2. Configure GLAD (Static Library) ---
+# --- Configure GLAD (Static Library) ---
 add_library(glad STATIC
         Source/ThirdParty/glad/src/glad.c
 )
@@ -30,8 +30,8 @@ target_include_directories(glad
         ${CMAKE_CURRENT_SOURCE_DIR}/Source/ThirdParty/glad/include
 )
 
-# --- 3. Build Engine Library (Static. #TODO change to Shared DLL) ---
-add_library(DoppioEngine STATIC
+# --- Variable Grouping ---
+set(IMGUI_SOURCES
         # Dear ImGui Core
         Source/ThirdParty/imgui/imconfig.h
         Source/ThirdParty/imgui/imgui.h
@@ -51,7 +51,9 @@ add_library(DoppioEngine STATIC
 
         # Debugger Visualizer
         Source/ThirdParty/imgui/imgui.natvis
+)
 
+set(ENGINE_RENDERER_SOURCES
         # DoppioEngine
         Source/Renderer/Renderer.h
         Source/Renderer/Renderer.cpp
@@ -59,15 +61,25 @@ add_library(DoppioEngine STATIC
         Source/Renderer/VertexBuffer.cpp
         Source/Renderer/IndexBuffer.h
         Source/Renderer/IndexBuffer.cpp
+        Source/Renderer/VertexArray.h
+        Source/Renderer/VertexArray.cpp
+        Source/Renderer/VertexBufferLayout.h
+        Source/Renderer/VertexBufferLayout.cpp
 )
 
-# --- 4. Expose Engine API ---
+# --- Build Engine Library Static. --- #TODO change to Shared (DLL)
+add_library(DoppioEngine STATIC
+        ${IMGUI_SOURCES}
+        ${ENGINE_RENDERER_SOURCES}
+)
+
+# --- Expose Engine API ---
 target_include_directories(DoppioEngine
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/Source
 )
 
-# --- 5. Internal Engine Dependencies ---
+# --- Internal Engine Dependencies ---
 target_include_directories(DoppioEngine
         PUBLIC # TODO change to PRIVATE later
         Source/ThirdParty/imgui
@@ -81,7 +93,7 @@ target_link_libraries(DoppioEngine
         glad
 )
 
-# --- 6. Compiler Flags ---
+# --- Compiler Flags ---
 if (MSVC)
     target_compile_options(DoppioEngine PRIVATE /std:c++latest /EHsc)
 endif ()

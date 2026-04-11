@@ -4,23 +4,28 @@
 
 namespace Doppio::Render
 {
-VertexBuffer::VertexBuffer( const unsigned int InSize, const void* Data )
+VertexBuffer::VertexBuffer( const uint32_t InSize, const void* InData )
 {
 	glGenBuffers( 1, &RendererId );
 	glBindBuffer( GL_ARRAY_BUFFER, RendererId );
-	glBufferData( GL_ARRAY_BUFFER, InSize, Data, GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, InSize, InData, GL_STATIC_DRAW );
 }
 
 VertexBuffer::VertexBuffer( VertexBuffer&& Other ) noexcept
 	: RendererId( Other.RendererId )
 {
+	Other.RendererId = 0;
 }
 
 VertexBuffer& VertexBuffer::operator=( VertexBuffer&& Other ) noexcept
 {
 	if ( this == &Other )
+	{
 		return *this;
+	}
+
 	RendererId = Other.RendererId;
+	Other.RendererId = 0;
 	return *this;
 }
 
@@ -34,7 +39,7 @@ void VertexBuffer::Bind() const
 	glBindBuffer( GL_ARRAY_BUFFER, RendererId );
 }
 
-void VertexBuffer::Unbind() const
+void VertexBuffer::Unbind()
 {
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 }

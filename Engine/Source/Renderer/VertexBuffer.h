@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <cstdint>
 
 namespace Doppio::Render
 {
@@ -6,20 +7,21 @@ class VertexBuffer
 {
 public:
 	VertexBuffer() = delete;
-	VertexBuffer( unsigned int InSize, const void* InData );
+	VertexBuffer( uint32_t InSize, const void* InData );
 	~VertexBuffer();
-	
+
 	VertexBuffer( const VertexBuffer& Other ) = delete;
 	VertexBuffer& operator=( const VertexBuffer& Other ) = delete;
-	
+
 	VertexBuffer( VertexBuffer&& Other ) noexcept;
 	VertexBuffer& operator=( VertexBuffer&& Other ) noexcept;
 
 	void Bind() const;
-	void Unbind() const;
+
+	static void Unbind();
 
 private:
 	/// Internal Renderer Id
-	unsigned int RendererId = 0;
+	uint32_t RendererId = 0;
 };
 }
