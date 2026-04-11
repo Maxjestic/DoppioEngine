@@ -27,7 +27,7 @@ namespace Doppio::Render
 		VertexBufferLayout& operator=( VertexBufferLayout&& Other ) noexcept;
 
 		template <typename T>
-		void Push( uint32_t InCount ) = delete;
+		void Push( uint32_t InComponentCount ) = delete;
 
 		[[nodiscard]] const std::vector<VertexBufferElement>& GetElements() const;
 		[[nodiscard]] uint32_t GetStride() const;
@@ -38,11 +38,11 @@ namespace Doppio::Render
 	};
 
 	template <>
-	void VertexBufferLayout::Push<float>( uint32_t InCount );
+	void VertexBufferLayout::Push<float>( uint32_t InComponentCount );
 
 	template <>
-	void VertexBufferLayout::Push<uint32_t>( uint32_t InCount );
+	void VertexBufferLayout::Push<uint32_t>( uint32_t InComponentCount );
 
 	template <>
-	void VertexBufferLayout::Push<uint8_t>( uint32_t InCount );
+	void VertexBufferLayout::Push<uint8_t>( uint32_t InComponentCount );
 }

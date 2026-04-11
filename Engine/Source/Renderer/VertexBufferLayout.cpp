@@ -26,24 +26,24 @@ namespace Doppio::Render
 	}
 
 	template <>
-	void VertexBufferLayout::Push<float>( const uint32_t InCount )
+	void VertexBufferLayout::Push<float>( const uint32_t InComponentCount )
 	{
-		Elements.push_back( { GL_FLOAT, InCount, GL_FALSE } );
-		Stride += InCount * VertexBufferElement::GetSizeOfType( GL_FLOAT );
+		Elements.push_back( { GL_FLOAT, InComponentCount, GL_FALSE } );
+		Stride += InComponentCount * VertexBufferElement::GetSizeOfType( GL_FLOAT );
 	}
 
 	template <>
-	void VertexBufferLayout::Push<uint32_t>( const uint32_t InCount )
+	void VertexBufferLayout::Push<uint32_t>( const uint32_t InComponentCount )
 	{
-		Elements.push_back( { GL_UNSIGNED_INT, InCount, GL_FALSE } );
-		Stride += InCount * VertexBufferElement::GetSizeOfType( GL_UNSIGNED_INT );
+		Elements.push_back( { GL_UNSIGNED_INT, InComponentCount, GL_FALSE } );
+		Stride += InComponentCount * VertexBufferElement::GetSizeOfType( GL_UNSIGNED_INT );
 	}
 
 	template <>
-	void VertexBufferLayout::Push<uint8_t>( const uint32_t InCount )
+	void VertexBufferLayout::Push<uint8_t>( const uint32_t InComponentCount )
 	{
-		Elements.push_back( { GL_UNSIGNED_BYTE, InCount, GL_TRUE } );
-		Stride += InCount * VertexBufferElement::GetSizeOfType( GL_UNSIGNED_BYTE );
+		Elements.push_back( { GL_UNSIGNED_BYTE, InComponentCount, GL_TRUE } );
+		Stride += InComponentCount * VertexBufferElement::GetSizeOfType( GL_UNSIGNED_BYTE );
 	}
 
 	VertexBufferLayout::VertexBufferLayout( VertexBufferLayout&& Other ) noexcept
