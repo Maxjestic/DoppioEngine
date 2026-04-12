@@ -220,7 +220,7 @@ int main()
 	vertexBuffer.Unbind();
 	indexBuffer.Unbind();
 	glUseProgram( 0 );
-	
+
 	float red = 0.0f;
 	float increment = 0.01f;
 

@@ -7,7 +7,7 @@ namespace Doppio::Render
 	struct VertexBufferElement
 	{
 		uint32_t Type;
-		uint32_t Count;
+		uint32_t ComponentCount;
 		uint8_t Normalized;
 
 		static uint32_t GetSizeOfType( uint32_t Type );

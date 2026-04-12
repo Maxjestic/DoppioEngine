@@ -21,13 +21,18 @@ namespace Doppio::Render
 	VertexArray::VertexArray( VertexArray&& Other ) noexcept
 		: RendererId( Other.RendererId )
 	{
+		Other.RendererId = 0;
 	}
 
 	VertexArray& VertexArray::operator=( VertexArray&& Other ) noexcept
 	{
 		if ( this != &Other )
 		{
+			glDeleteVertexArrays( 1, &RendererId );
+			
 			RendererId = Other.RendererId;
+			
+			Other.RendererId = 0;
 		}
 
 		return *this;
@@ -44,12 +49,12 @@ namespace Doppio::Render
 			const auto& element = elements[i];
 			glEnableVertexAttribArray( i );
 			glVertexAttribPointer( i,
-			                       element.Count,
+			                       element.ComponentCount,
 			                       element.Type,
 			                       element.Normalized,
 			                       Layout.GetStride(),
 			                       reinterpret_cast<const void*>(offset) ); // NOLINT(performance-no-int-to-ptr)
-			offset += element.Count * element.GetSizeOfType();
+			offset += element.ComponentCount * element.GetSizeOfType();
 		}
 	}
 
