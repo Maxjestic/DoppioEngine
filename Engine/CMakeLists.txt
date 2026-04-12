@@ -53,8 +53,13 @@ set(IMGUI_SOURCES
         Source/ThirdParty/imgui/imgui.natvis
 )
 
+set(ENGINE_CORE_SOURCES
+        # DoppioEngine Core
+        Source/Core/Assert.h
+)
+
 set(ENGINE_RENDERER_SOURCES
-        # DoppioEngine
+        # DoppioEngine Renderer
         Source/Renderer/Renderer.h
         Source/Renderer/Renderer.cpp
         Source/Renderer/VertexBuffer.h
@@ -69,10 +74,16 @@ set(ENGINE_RENDERER_SOURCES
         Source/Renderer/Shader.cpp
 )
 
-# --- Build Engine Library Static. --- #TODO change to Shared (DLL)
+# --- Build Engine Library Static --- #TODO change to Shared (DLL)
 add_library(DoppioEngine STATIC
         ${IMGUI_SOURCES}
+        ${ENGINE_CORE_SOURCES}
         ${ENGINE_RENDERER_SOURCES}
+)
+
+# --- Define DOPPIO_DEBUG for Debug Builds ---
+target_compile_definitions(DoppioEngine PUBLIC
+        $<$<CONFIG:Debug>:DOPPIO_DEBUG>
 )
 
 # --- Expose Engine API ---

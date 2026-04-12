@@ -11,125 +11,9 @@
 #include "Renderer/VertexBuffer.h"
 #include "Renderer/IndexBuffer.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/Shader.h"
 #include "Renderer/VertexArray.h"
 #include "Renderer/VertexBufferLayout.h"
-
-
-namespace
-{
-	struct ShaderProgramSource
-	{
-		std::string VertexSource;
-		std::string FragmentSource;
-	};
-
-	ShaderProgramSource ParseShader( const std::string& Filepath )
-	{
-		std::ifstream file( Filepath );
-
-		if ( !file.is_open() )
-		{
-			std::println( stderr, "ERROR: Could not open shader file at: {}", Filepath );
-			return { "", "" };
-		}
-
-		enum class ShaderType : int8_t
-		{
-			None = -1,
-			Vertex = 0,
-			Fragment = 1
-		};
-
-		std::string line;
-		std::stringstream stringStream[2];
-		ShaderType shaderType = ShaderType::None;
-		while ( getline( file, line ) )
-		{
-			if ( line.find( "#shader" ) != std::string::npos )
-			{
-				if ( line.find( "vertex" ) != std::string::npos )
-				{
-					shaderType = ShaderType::Vertex;
-				}
-				else if ( line.find( "fragment" ) != std::string::npos )
-				{
-					shaderType = ShaderType::Fragment;
-				}
-			}
-			else
-			{
-				stringStream[static_cast<int>(shaderType)] << line << '\n';
-			}
-		}
-
-		ShaderProgramSource shader;
-		shader.VertexSource = stringStream[static_cast<int>(ShaderType::Vertex)].str();
-		shader.FragmentSource = stringStream[static_cast<int>(ShaderType::Fragment)].str();
-
-		return shader;
-	}
-
-	unsigned int CompileShader( const unsigned int ShaderType, const std::string& ShaderCode )
-	{
-		const unsigned int vertexShaderId = glCreateShader( ShaderType );
-		const char* sourcePointer = ShaderCode.c_str();
-		glShaderSource( vertexShaderId, 1, &sourcePointer, nullptr );
-		glCompileShader( vertexShaderId );
-
-		int result;
-		glGetShaderiv( vertexShaderId, GL_COMPILE_STATUS, &result );
-		if ( result == GL_FALSE )
-		{
-			int length;
-			glGetShaderiv( vertexShaderId, GL_INFO_LOG_LENGTH, &length );
-
-			auto infoLog = static_cast<char*>(alloca( length * sizeof( char ) ));
-			glGetShaderInfoLog( vertexShaderId, length, &length, infoLog );
-
-			std::println( stderr,
-			              "Failed to compile {} shader: {}",
-			              ( ShaderType == GL_VERTEX_SHADER ? "vertex" : "fragment" ),
-			              infoLog );
-
-			glDeleteShader( vertexShaderId );
-			return 0;
-		}
-
-		return vertexShaderId;
-	}
-
-	unsigned int CreateShader( const std::string& VertexShader, const std::string& FragmentShader )
-	{
-		const unsigned int programId = glCreateProgram();
-		const unsigned int vertexShaderId = CompileShader( GL_VERTEX_SHADER, VertexShader );
-		const unsigned int fragmentShaderId = CompileShader( GL_FRAGMENT_SHADER, FragmentShader );
-
-		glAttachShader( programId, vertexShaderId );
-		glAttachShader( programId, fragmentShaderId );
-		glLinkProgram( programId );
-		glValidateProgram( programId );
-
-		int result;
-		glGetProgramiv( programId, GL_LINK_STATUS, &result );
-		if ( result == GL_FALSE )
-		{
-			int length;
-			glGetProgramiv( programId, GL_INFO_LOG_LENGTH, &length );
-			auto infoLog = static_cast<char*>(alloca( length * sizeof( char ) ));
-			glGetProgramInfoLog( programId, length, &length, infoLog );
-			std::println( stderr, "Failed to link shader program: {}", infoLog );
-			glDeleteProgram( programId );
-			glDeleteShader( vertexShaderId );
-			glDeleteShader( fragmentShaderId );
-			return 0;
-		}
-
-		glDeleteShader( vertexShaderId );
-		glDeleteShader( fragmentShaderId );
-
-		return programId;
-	}
-}
 
 int main()
 {
@@ -212,14 +96,12 @@ int main()
 
 	const Doppio::Render::IndexBuffer indexBuffer{ 6, indices };
 
-	const ShaderProgramSource shaderSource = ParseShader( "Engine/Resources/Shaders/Basic.shader" );
-
-	const unsigned int shader = CreateShader( shaderSource.VertexSource, shaderSource.FragmentSource );
+	Doppio::Render::Shader shader{ "Engine/Resources/Shaders/Basic.shader" };
 
 	vertexArray.Unbind();
 	vertexBuffer.Unbind();
 	indexBuffer.Unbind();
-	glUseProgram( 0 );
+	shader.Unbind();
 
 	float red = 0.0f;
 	float increment = 0.01f;
@@ -228,8 +110,10 @@ int main()
 	{
 		glClear( GL_COLOR_BUFFER_BIT );
 
-		glUseProgram( shader );
-		glUniform4f( 1, red, 0.3f, 0.8f, 1.0f );
+		shader.Bind();
+
+		const auto color = glm::vec4( red, 0.3f, 0.8f, 1.0f );
+		shader.SetUniform( "u_Color", color );
 
 		vertexArray.Bind();
 		indexBuffer.Bind();
@@ -252,7 +136,6 @@ int main()
 		glfwPollEvents();
 	}
 
-	glDeleteProgram( shader );
 	glfwDestroyWindow( window );
 	glfwTerminate();
 
