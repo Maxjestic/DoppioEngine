@@ -4,7 +4,11 @@
 #include <print>
 #include <glad/glad.h>
 
+#include "IndexBuffer.h"
+#include "Shader.h"
+#include "VertexArray.h"
 #include "GLFW/glfw3.h"
+#include "glm/vec4.hpp"
 
 namespace
 {
@@ -141,5 +145,19 @@ namespace Doppio::Render
 		glEnable( GL_DEBUG_OUTPUT );
 		glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
 		glDebugMessageCallback( GLDebugMessageCallback, nullptr );
+	}
+
+	void Renderer::Draw( const VertexArray& VertexArray, const IndexBuffer& IndexBuffer, const Shader& Shader )
+	{
+		Shader.Bind();
+		VertexArray.Bind();
+		IndexBuffer.Bind();
+		
+		glDrawElements( GL_TRIANGLES, IndexBuffer.GetCount(), GL_UNSIGNED_INT, nullptr );
+	}
+
+	void Renderer::Clear()
+	{
+		glClear( GL_COLOR_BUFFER_BIT );
 	}
 }

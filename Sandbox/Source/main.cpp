@@ -108,17 +108,13 @@ int main()
 
 	while ( !glfwWindowShouldClose( window ) )
 	{
-		glClear( GL_COLOR_BUFFER_BIT );
-
+		Doppio::Render::Renderer::Clear();
+		
 		shader.Bind();
-
 		const auto color = glm::vec4( red, 0.3f, 0.8f, 1.0f );
 		shader.SetUniform( "u_Color", color );
 
-		vertexArray.Bind();
-		indexBuffer.Bind();
-
-		glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr );
+		Doppio::Render::Renderer::Draw( vertexArray, indexBuffer, shader );
 
 		if ( red > 1.0f )
 		{
