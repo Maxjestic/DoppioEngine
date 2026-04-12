@@ -20,7 +20,7 @@ namespace Doppio::Render
 
 		void AddBuffer( const VertexBuffer& Buffer, const VertexBufferLayout& Layout ) const;
 		void Bind() const;
-		static void Unbind();
+		void Unbind() const;
 
 	private:
 		uint32_t RendererId = 0;

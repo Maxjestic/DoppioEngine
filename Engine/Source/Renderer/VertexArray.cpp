@@ -59,7 +59,7 @@ namespace Doppio::Render
 		glBindVertexArray( RendererId );
 	}
 
-	void VertexArray::Unbind()
+	void VertexArray::Unbind() const
 	{
 		glBindVertexArray( 0 );
 	}
