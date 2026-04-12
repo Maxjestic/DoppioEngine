@@ -25,12 +25,11 @@ namespace Doppio::Render
 
 	VertexArray& VertexArray::operator=( VertexArray&& Other ) noexcept
 	{
-		if ( this == &Other )
+		if ( this != &Other )
 		{
-			return *this;
+			RendererId = Other.RendererId;
 		}
 
-		RendererId = Other.RendererId;
 		return *this;
 	}
 

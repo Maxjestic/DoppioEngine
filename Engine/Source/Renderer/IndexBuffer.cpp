@@ -13,20 +13,25 @@ namespace Doppio::Render
 	}
 
 	IndexBuffer::IndexBuffer( IndexBuffer&& Other ) noexcept
-		: RendererId( Other.RendererId )
+		: RendererId( Other.RendererId ), Count( Other.Count )
 	{
 		Other.RendererId = 0;
+		Other.Count = 0;
 	}
 
 	IndexBuffer& IndexBuffer::operator=( IndexBuffer&& Other ) noexcept
 	{
-		if ( this == &Other )
+		if ( this != &Other )
 		{
-			return *this;
+			glDeleteBuffers( 1, &RendererId );
+
+			RendererId = Other.RendererId;
+			Count = Other.Count;
+
+			Other.Count = 0;
+			Other.RendererId = 0;
 		}
 
-		RendererId = Other.RendererId;
-		Other.RendererId = 0;
 		return *this;
 	}
 
@@ -40,7 +45,7 @@ namespace Doppio::Render
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, RendererId );
 	}
 
-	void IndexBuffer::Unbind()
+	void IndexBuffer::Unbind() const
 	{
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 	}

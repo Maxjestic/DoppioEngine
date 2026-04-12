@@ -65,6 +65,8 @@ set(ENGINE_RENDERER_SOURCES
         Source/Renderer/VertexArray.cpp
         Source/Renderer/VertexBufferLayout.h
         Source/Renderer/VertexBufferLayout.cpp
+        Source/Renderer/Shader.h
+        Source/Renderer/Shader.cpp
 )
 
 # --- Build Engine Library Static. --- #TODO change to Shared (DLL)

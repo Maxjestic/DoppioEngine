@@ -18,14 +18,12 @@ namespace Doppio::Render
 		IndexBuffer& operator=( IndexBuffer&& Other ) noexcept;
 
 		void Bind() const;
-		static void Unbind();
+		void Unbind() const;
 
 		[[nodiscard]] uint32_t GetCount() const;
 
 	private:
-		/// Internal Renderer Id
 		uint32_t RendererId = 0;
-
 		uint32_t Count = 0;
 	};
 }

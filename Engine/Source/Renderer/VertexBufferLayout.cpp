@@ -55,14 +55,12 @@ namespace Doppio::Render
 
 	VertexBufferLayout& VertexBufferLayout::operator=( VertexBufferLayout&& Other ) noexcept
 	{
-		if ( this == &Other )
+		if ( this != &Other )
 		{
-			return *this;
+			Elements = std::move( Other.Elements );
+			Stride = Other.Stride;
+			Other.Stride = 0;
 		}
-
-		Elements = std::move( Other.Elements );
-		Stride = Other.Stride;
-		Other.Stride = 0;
 
 		return *this;
 	}
