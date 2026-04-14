@@ -12,6 +12,7 @@
 #include "Renderer/IndexBuffer.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Shader.h"
+#include "Renderer/Texture.h"
 #include "Renderer/VertexArray.h"
 #include "Renderer/VertexBufferLayout.h"
 
@@ -74,10 +75,10 @@ int main()
 	ImGui_ImplOpenGL3_Init( "#version 460 core" );
 
 	constexpr float positions[] = {
-		-0.5f, -0.5f,
-		0.5f, -0.5f,
-		0.5f, 0.5f,
-		-0.5f, 0.5f,
+		-0.5f, -0.5f, 0.0f, 0.0f,
+		0.5f, -0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.0f, 1.0f
 	};
 
 	constexpr unsigned int indices[]
@@ -85,11 +86,15 @@ int main()
 		0, 1, 2,
 		2, 3, 0
 	};
+	
+	glEnable( GL_BLEND );
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	const Doppio::Render::VertexArray vertexArray;
-	const Doppio::Render::VertexBuffer vertexBuffer{ 4 * 2 * sizeof( float ), positions };
+	const Doppio::Render::VertexBuffer vertexBuffer{ 4 * 4 * sizeof( float ), positions };
 
 	Doppio::Render::VertexBufferLayout layout;
+	layout.Push<float>( 2 );
 	layout.Push<float>( 2 );
 
 	vertexArray.AddBuffer( vertexBuffer, layout );
@@ -97,6 +102,9 @@ int main()
 	const Doppio::Render::IndexBuffer indexBuffer{ 6, indices };
 
 	Doppio::Render::Shader shader{ "Engine/Resources/Shaders/Basic.shader" };
+
+	const Doppio::Render::Texture texture{ "Engine/Resources/Textures/Test.png" };
+	texture.Bind();
 
 	vertexArray.Unbind();
 	vertexBuffer.Unbind();
@@ -109,10 +117,11 @@ int main()
 	while ( !glfwWindowShouldClose( window ) )
 	{
 		Doppio::Render::Renderer::Clear();
-		
+
 		shader.Bind();
 		const auto color = glm::vec4( red, 0.3f, 0.8f, 1.0f );
-		shader.SetUniform( "u_Color", color );
+		//shader.SetUniform( "u_Color", color );
+		shader.SetUniform( "u_Texture", 0 );
 
 		Doppio::Render::Renderer::Draw( vertexArray, indexBuffer, shader );
 

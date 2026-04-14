@@ -8,7 +8,6 @@
 #include "Shader.h"
 #include "VertexArray.h"
 #include "GLFW/glfw3.h"
-#include "glm/vec4.hpp"
 
 namespace
 {
@@ -152,8 +151,8 @@ namespace Doppio::Render
 		Shader.Bind();
 		VertexArray.Bind();
 		IndexBuffer.Bind();
-		
-		glDrawElements( GL_TRIANGLES, IndexBuffer.GetCount(), GL_UNSIGNED_INT, nullptr );
+
+		glDrawElements( GL_TRIANGLES, static_cast<int32_t>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr );
 	}
 
 	void Renderer::Clear()

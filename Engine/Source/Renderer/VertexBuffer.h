@@ -20,7 +20,6 @@ namespace Doppio::Render
 		void Unbind() const;
 
 	private:
-		/// Internal Renderer Id
 		uint32_t RendererId = 0;
 	};
 }

@@ -9,7 +9,10 @@ namespace Doppio::Render
 	{
 		glGenBuffers( 1, &RendererId );
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, RendererId );
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, InCount * sizeof( uint32_t ), InData, GL_STATIC_DRAW );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER,
+		              static_cast<GLsizeiptr>(InCount) * static_cast<GLsizeiptr>(sizeof( uint32_t )),
+		              InData,
+		              GL_STATIC_DRAW );
 	}
 
 	IndexBuffer::IndexBuffer( IndexBuffer&& Other ) noexcept

@@ -53,6 +53,11 @@ set(IMGUI_SOURCES
         Source/ThirdParty/imgui/imgui.natvis
 )
 
+set(STB_IMAGE_SOURCES
+        Source/ThirdParty/stb_image/stb_image.h
+        Source/ThirdParty/stb_image/stb_image.cpp
+)
+
 set(ENGINE_CORE_SOURCES
         # DoppioEngine Core
         Source/Core/Assert.h
@@ -72,11 +77,14 @@ set(ENGINE_RENDERER_SOURCES
         Source/Renderer/VertexBufferLayout.cpp
         Source/Renderer/Shader.h
         Source/Renderer/Shader.cpp
+        Source/Renderer/Texture.h
+        Source/Renderer/Texture.cpp
 )
 
 # --- Build Engine Library Static --- #TODO change to Shared (DLL)
 add_library(DoppioEngine STATIC
         ${IMGUI_SOURCES}
+        ${STB_IMAGE_SOURCES}
         ${ENGINE_CORE_SOURCES}
         ${ENGINE_RENDERER_SOURCES}
 )
