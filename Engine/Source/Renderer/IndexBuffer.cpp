@@ -4,29 +4,29 @@
 
 namespace Doppio::Render
 {
-	IndexBuffer::IndexBuffer( const uint32_t InCount, const uint32_t* InData )
-		: Count( InCount )
+	IndexBuffer::IndexBuffer(const uint32_t InCount, const uint32_t* InData)
+		: Count(InCount)
 	{
-		glGenBuffers( 1, &RendererId );
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, RendererId );
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER,
-		              static_cast<GLsizeiptr>(InCount) * static_cast<GLsizeiptr>(sizeof( uint32_t )),
-		              InData,
-		              GL_STATIC_DRAW );
+		glGenBuffers(1, &RendererId);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+		             static_cast<GLsizeiptr>(InCount) * static_cast<GLsizeiptr>(sizeof(uint32_t)),
+		             InData,
+		             GL_STATIC_DRAW);
 	}
 
-	IndexBuffer::IndexBuffer( IndexBuffer&& Other ) noexcept
-		: RendererId( Other.RendererId ), Count( Other.Count )
+	IndexBuffer::IndexBuffer(IndexBuffer&& Other) noexcept
+		: RendererId(Other.RendererId), Count(Other.Count)
 	{
 		Other.RendererId = 0;
 		Other.Count = 0;
 	}
 
-	IndexBuffer& IndexBuffer::operator=( IndexBuffer&& Other ) noexcept
+	IndexBuffer& IndexBuffer::operator=(IndexBuffer&& Other) noexcept
 	{
-		if ( this != &Other )
+		if (this != &Other)
 		{
-			glDeleteBuffers( 1, &RendererId );
+			glDeleteBuffers(1, &RendererId);
 
 			RendererId = Other.RendererId;
 			Count = Other.Count;
@@ -40,17 +40,17 @@ namespace Doppio::Render
 
 	IndexBuffer::~IndexBuffer()
 	{
-		glDeleteBuffers( 1, &RendererId );
+		glDeleteBuffers(1, &RendererId);
 	}
 
 	void IndexBuffer::Bind() const
 	{
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, RendererId );
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
 	}
 
 	void IndexBuffer::Unbind() const
 	{
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
 	uint32_t IndexBuffer::GetCount() const

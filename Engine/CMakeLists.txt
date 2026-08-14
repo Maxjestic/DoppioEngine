@@ -61,6 +61,7 @@ set(STB_IMAGE_SOURCES
 set(ENGINE_CORE_SOURCES
         # DoppioEngine Core
         Source/Core/Assert.h
+        Source/Core/DoppioPCH.h
 )
 
 set(ENGINE_RENDERER_SOURCES
@@ -88,6 +89,9 @@ add_library(DoppioEngine STATIC
         ${ENGINE_CORE_SOURCES}
         ${ENGINE_RENDERER_SOURCES}
 )
+
+# --- Precompiled Headers ---
+target_precompile_headers(DoppioEngine PRIVATE Source/Core/DoppioPCH.h)
 
 # --- Define DOPPIO_DEBUG for Debug Builds ---
 target_compile_definitions(DoppioEngine PUBLIC

@@ -16,15 +16,15 @@ namespace
 	constexpr auto ColorMagenta = "\x1b[35m";
 	constexpr auto ColorReset = "\x1b[0m";
 
-	void GLDebugMessageCallback( GLenum InSource, GLenum InType, GLuint Id, GLenum InSeverity, GLsizei Length,
-	                             const GLchar* Message, const void* Data )
+	void GLDebugMessageCallback(GLenum InSource, GLenum InType, GLuint Id, GLenum InSeverity, GLsizei Length,
+	                            const GLchar* Message, const void* Data)
 	{
 		const char* source;
 		const char* type;
 		const char* currentColor;
 		FILE* outputStream;
 
-		switch ( InSource )
+		switch (InSource)
 		{
 		case GL_DEBUG_SOURCE_API:
 			source = "API";
@@ -52,7 +52,7 @@ namespace
 			break;
 		}
 
-		switch ( InType )
+		switch (InType)
 		{
 		case GL_DEBUG_TYPE_ERROR:
 			type = "ERROR";
@@ -87,7 +87,7 @@ namespace
 			break;
 		}
 
-		switch ( InSeverity )
+		switch (InSeverity)
 		{
 		case GL_DEBUG_SEVERITY_HIGH:
 			currentColor = ColorRed;
@@ -115,14 +115,14 @@ namespace
 			break;
 		}
 
-		std::println( outputStream,
-		              "{}{}: {}, raised from {}: {}{}",
-		              currentColor,
-		              Id,
-		              type,
-		              source,
-		              Message,
-		              ColorReset );
+		std::println(outputStream,
+		             "{}{}: {}, raised from {}: {}{}",
+		             currentColor,
+		             Id,
+		             type,
+		             source,
+		             Message,
+		             ColorReset);
 	}
 }
 
@@ -130,33 +130,33 @@ namespace Doppio::Render
 {
 	void Renderer::Init()
 	{
-		const int version = gladLoadGLLoader( []( const char* Name ) -> void*
+		const int version = gladLoadGLLoader([](const char* Name) -> void*
 		{
-			return reinterpret_cast<void*>(glfwGetProcAddress( Name ));
-		} );
+			return reinterpret_cast<void*>(glfwGetProcAddress(Name));
+		});
 
-		if ( version == 0 )
+		if (version == 0)
 		{
-			std::println( stderr, "Failed to initialize GLAD" );
+			std::println(stderr, "Failed to initialize GLAD");
 			return;
 		}
 
-		glEnable( GL_DEBUG_OUTPUT );
-		glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
-		glDebugMessageCallback( GLDebugMessageCallback, nullptr );
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(GLDebugMessageCallback, nullptr);
 	}
 
-	void Renderer::Draw( const VertexArray& VertexArray, const IndexBuffer& IndexBuffer, const Shader& Shader )
+	void Renderer::Draw(const VertexArray& VertexArray, const IndexBuffer& IndexBuffer, const Shader& Shader)
 	{
 		Shader.Bind();
 		VertexArray.Bind();
 		IndexBuffer.Bind();
 
-		glDrawElements( GL_TRIANGLES, static_cast<int32_t>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr );
+		glDrawElements(GL_TRIANGLES, static_cast<int32_t>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr);
 	}
 
 	void Renderer::Clear()
 	{
-		glClear( GL_COLOR_BUFFER_BIT );
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
 }

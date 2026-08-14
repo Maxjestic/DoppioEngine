@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <string>
 
 #include "glm/fwd.hpp"
 
@@ -11,12 +10,12 @@ namespace Doppio::Render
 		explicit Texture(const std::string& InFilePath);
 		~Texture();
 
-		Texture( const Texture& Other ) = delete;
-		Texture& operator=( const Texture& Other ) = delete;
+		Texture(const Texture& Other) = delete;
+		Texture& operator=(const Texture& Other) = delete;
 
-		Texture( Texture&& Other ) noexcept;
-		Texture& operator=( Texture&& Other ) noexcept;
-		
+		Texture(Texture&& Other) noexcept;
+		Texture& operator=(Texture&& Other) noexcept;
+
 		void Bind(uint32_t Slot = 0) const;
 		void Unbind() const;
 

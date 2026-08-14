@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <cstdint>
 
 namespace Doppio::Render
 {
@@ -12,13 +11,13 @@ namespace Doppio::Render
 		VertexArray();
 		~VertexArray();
 
-		VertexArray( const VertexArray& Other ) = delete;
-		VertexArray& operator=( const VertexArray& Other ) = delete;
+		VertexArray(const VertexArray& Other) = delete;
+		VertexArray& operator=(const VertexArray& Other) = delete;
 
-		VertexArray( VertexArray&& Other ) noexcept;
-		VertexArray& operator=( VertexArray&& Other ) noexcept;
+		VertexArray(VertexArray&& Other) noexcept;
+		VertexArray& operator=(VertexArray&& Other) noexcept;
 
-		void AddBuffer( const VertexBuffer& Buffer, const VertexBufferLayout& Layout ) const;
+		void AddBuffer(const VertexBuffer& Buffer, const VertexBufferLayout& Layout) const;
 		void Bind() const;
 		void Unbind() const;
 

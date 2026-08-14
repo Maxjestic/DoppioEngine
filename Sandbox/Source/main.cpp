@@ -1,53 +1,50 @@
 ﻿#include <fstream>
 #include <print>
-#include <sstream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <unordered_map>
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "ThirdParty/GladWrapper.h"
+#include "ThirdParty/ImGuiWrapper.h"
 
-#include "Renderer/VertexBuffer.h"
 #include "Renderer/IndexBuffer.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Shader.h"
 #include "Renderer/Texture.h"
 #include "Renderer/VertexArray.h"
+#include "Renderer/VertexBuffer.h"
 #include "Renderer/VertexBufferLayout.h"
 
 int main()
 {
-	if ( !glfwInit() )
+	if (!glfwInit())
 	{
-		std::println( stderr, "Failed to initialize GLFW" );
+		std::println(stderr, "Failed to initialize GLFW");
 		return -1;
 	}
 
-	glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-	glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 6 );
-	glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
-	glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE );
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
-	GLFWwindow* window = glfwCreateWindow( 1280, 720, "DoppioEngine", nullptr, nullptr );
-	if ( window == nullptr )
+	GLFWwindow* window = glfwCreateWindow(1280, 720, "DoppioEngine", nullptr, nullptr);
+	if (window == nullptr)
 	{
-		std::println( stderr, "Failed to create GLFW window" );
+		std::println(stderr, "Failed to create GLFW window");
 		glfwTerminate();
 		return -1;
 	}
-	glfwMakeContextCurrent( window );
+	glfwMakeContextCurrent(window);
 
-	glfwSwapInterval( 1 );
+	glfwSwapInterval(1);
 
-	const int version = gladLoadGLLoader( []( const char* Name ) -> void*
+	const int version = gladLoadGLLoader([](const char* Name) -> void*
 	{
-		return reinterpret_cast<void*>(glfwGetProcAddress( Name ));
-	} );
+		return reinterpret_cast<void*>(glfwGetProcAddress(Name));
+	});
 
-	if ( version == 0 )
+	if (version == 0)
 	{
-		std::println( stderr, "Failed to initialize GLAD" );
+		std::println(stderr, "Failed to initialize GLAD");
 		return -1;
 	}
 
@@ -65,14 +62,14 @@ int main()
 	ImGui::StyleColorsDark();
 
 	ImGuiStyle& style = ImGui::GetStyle();
-	if ( inOut.ConfigFlags & ImGuiConfigFlags_ViewportsEnable )
+	if (inOut.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		style.WindowRounding = 2.0f;
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 	}
 
-	ImGui_ImplGlfw_InitForOpenGL( window, true );
-	ImGui_ImplOpenGL3_Init( "#version 460 core" );
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 460 core");
 
 	constexpr float positions[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f,
@@ -86,24 +83,24 @@ int main()
 		0, 1, 2,
 		2, 3, 0
 	};
-	
-	glEnable( GL_BLEND );
+
+	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	const Doppio::Render::VertexArray vertexArray;
-	const Doppio::Render::VertexBuffer vertexBuffer{ 4 * 4 * sizeof( float ), positions };
+	const Doppio::Render::VertexBuffer vertexBuffer{4 * 4 * sizeof(float), positions};
 
 	Doppio::Render::VertexBufferLayout layout;
-	layout.Push<float>( 2 );
-	layout.Push<float>( 2 );
+	layout.Push<float>(2);
+	layout.Push<float>(2);
 
-	vertexArray.AddBuffer( vertexBuffer, layout );
+	vertexArray.AddBuffer(vertexBuffer, layout);
 
-	const Doppio::Render::IndexBuffer indexBuffer{ 6, indices };
+	const Doppio::Render::IndexBuffer indexBuffer{6, indices};
 
-	Doppio::Render::Shader shader{ "Engine/Resources/Shaders/Basic.shader" };
+	Doppio::Render::Shader shader{"Engine/Resources/Shaders/Basic.shader"};
 
-	const Doppio::Render::Texture texture{ "Engine/Resources/Textures/Test.png" };
+	const Doppio::Render::Texture texture{"Engine/Resources/Textures/Test.png"};
 	texture.Bind();
 
 	vertexArray.Unbind();
@@ -114,34 +111,34 @@ int main()
 	float red = 0.0f;
 	float increment = 0.01f;
 
-	while ( !glfwWindowShouldClose( window ) )
+	while (!glfwWindowShouldClose(window))
 	{
 		Doppio::Render::Renderer::Clear();
 
 		shader.Bind();
-		const auto color = glm::vec4( red, 0.3f, 0.8f, 1.0f );
+		const auto color = glm::vec4(red, 0.3f, 0.8f, 1.0f);
 		//shader.SetUniform( "u_Color", color );
-		shader.SetUniform( "u_Texture", 0 );
+		shader.SetUniform("u_Texture", 0);
 
-		Doppio::Render::Renderer::Draw( vertexArray, indexBuffer, shader );
+		Doppio::Render::Renderer::Draw(vertexArray, indexBuffer, shader);
 
-		if ( red > 1.0f )
+		if (red > 1.0f)
 		{
 			increment = -0.01f;
 		}
-		else if ( red < 0.0f )
+		else if (red < 0.0f)
 		{
 			increment = 0.01f;
 		}
 
 		red += increment;
 
-		glfwSwapBuffers( window );
+		glfwSwapBuffers(window);
 
 		glfwPollEvents();
 	}
 
-	glfwDestroyWindow( window );
+	glfwDestroyWindow(window);
 	glfwTerminate();
 
 	return 0;

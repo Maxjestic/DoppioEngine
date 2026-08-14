@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include <vector>
-
 namespace Doppio::Render
 {
 	struct VertexBufferElement
@@ -10,7 +8,7 @@ namespace Doppio::Render
 		uint32_t ComponentCount;
 		uint8_t Normalized;
 
-		static uint32_t GetSizeOfType( uint32_t Type );
+		static uint32_t GetSizeOfType(uint32_t Type);
 		[[nodiscard]] uint32_t GetSizeOfType() const;
 	};
 
@@ -20,14 +18,14 @@ namespace Doppio::Render
 		VertexBufferLayout() = default;
 		~VertexBufferLayout() = default;
 
-		VertexBufferLayout( const VertexBufferLayout& Other ) = delete;
-		VertexBufferLayout& operator=( const VertexBufferLayout& Other ) = delete;
+		VertexBufferLayout(const VertexBufferLayout& Other) = delete;
+		VertexBufferLayout& operator=(const VertexBufferLayout& Other) = delete;
 
-		VertexBufferLayout( VertexBufferLayout&& Other ) noexcept;
-		VertexBufferLayout& operator=( VertexBufferLayout&& Other ) noexcept;
+		VertexBufferLayout(VertexBufferLayout&& Other) noexcept;
+		VertexBufferLayout& operator=(VertexBufferLayout&& Other) noexcept;
 
 		template <typename T>
-		void Push( uint32_t InComponentCount ) = delete;
+		void Push(uint32_t InComponentCount) = delete;
 
 		[[nodiscard]] const std::vector<VertexBufferElement>& GetElements() const;
 		[[nodiscard]] uint32_t GetStride() const;
@@ -38,11 +36,11 @@ namespace Doppio::Render
 	};
 
 	template <>
-	void VertexBufferLayout::Push<float>( uint32_t InComponentCount );
+	void VertexBufferLayout::Push<float>(uint32_t InComponentCount);
 
 	template <>
-	void VertexBufferLayout::Push<uint32_t>( uint32_t InComponentCount );
+	void VertexBufferLayout::Push<uint32_t>(uint32_t InComponentCount);
 
 	template <>
-	void VertexBufferLayout::Push<uint8_t>( uint32_t InComponentCount );
+	void VertexBufferLayout::Push<uint8_t>(uint32_t InComponentCount);
 }
