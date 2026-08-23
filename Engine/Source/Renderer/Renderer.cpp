@@ -157,6 +157,7 @@ namespace Doppio::Render
 
 	void Renderer::Clear()
 	{
+		glClearColor(0.5f, 0.8f, 0.7f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
 }

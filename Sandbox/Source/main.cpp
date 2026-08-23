@@ -14,6 +14,23 @@
 #include "Renderer/VertexBuffer.h"
 #include "Renderer/VertexBufferLayout.h"
 
+// TODO Move window handling to proper place
+namespace
+{
+	void FramebufferSizeCallback(GLFWwindow* Window, const int Width, const int Height)
+	{
+		glViewport(0, 0, Width, Height);
+	}
+
+	void ProcessInput(GLFWwindow* Window)
+	{
+		if (glfwGetKey(Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		{
+			glfwSetWindowShouldClose(Window, true);
+		}
+	}
+}
+
 int main()
 {
 	if (!glfwInit())
@@ -35,6 +52,8 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
+
+	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 
 	glfwSwapInterval(1);
 
@@ -138,8 +157,9 @@ int main()
 
 		red += increment;
 
+		ProcessInput(window);
+		
 		glfwSwapBuffers(window);
-
 		glfwPollEvents();
 	}
 
