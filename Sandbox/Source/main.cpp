@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "ThirdParty/GladWrapper.h"
+#include "ThirdParty/GLMWrapper.h"
 #include "ThirdParty/ImGuiWrapper.h"
 
 #include "Renderer/IndexBuffer.h"
@@ -98,7 +99,11 @@ int main()
 
 	const Doppio::Render::IndexBuffer indexBuffer{6, indices};
 
+	const glm::mat4 projection = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
+
 	Doppio::Render::Shader shader{"Engine/Resources/Shaders/Basic.shader"};
+	shader.Bind();
+	shader.SetUniform("u_MVP", projection);
 
 	const Doppio::Render::Texture texture{"Engine/Resources/Textures/Test.png"};
 	texture.Bind();

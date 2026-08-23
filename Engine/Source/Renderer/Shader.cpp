@@ -1,9 +1,7 @@
 ﻿#include "Shader.h"
 
-#include <fstream>
-#include <print>
-#include <sstream>
-#include <glad/glad.h>
+#include "ThirdParty/GladWrapper.h"
+#include "ThirdParty/GLMWrapper.h"
 
 #include "Core/Assert.h"
 
@@ -68,6 +66,12 @@ namespace Doppio::Render
 	{
 		ValidateBindingState(Name);
 		glUniform1i(GetUniformLocation(Name), Value);
+	}
+
+	void Shader::SetUniform(const std::string& Name, const glm::mat4& Value)
+	{
+		ValidateBindingState(Name);
+		glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, &Value[0][0]);
 	}
 
 	int32_t Shader::GetUniformLocation(const std::string& Name)

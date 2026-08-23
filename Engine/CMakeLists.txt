@@ -82,12 +82,19 @@ set(ENGINE_RENDERER_SOURCES
         Source/Renderer/Texture.cpp
 )
 
+set(ENGINE_WRAPPER_SOURCES
+        Source/ThirdParty/ImGuiWrapper.h
+        Source/ThirdParty/GladWrapper.h
+        Source/ThirdParty/GLMWrapper.h
+)
+
 # --- Build Engine Library Static --- #TODO change to Shared (DLL)
 add_library(DoppioEngine STATIC
         ${IMGUI_SOURCES}
         ${STB_IMAGE_SOURCES}
         ${ENGINE_CORE_SOURCES}
         ${ENGINE_RENDERER_SOURCES}
+        ${ENGINE_WRAPPER_SOURCES}
 )
 
 # --- Precompiled Headers ---

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "glm/vec4.hpp"
+#include "glm/fwd.hpp"
 
 namespace Doppio::Render
 {
@@ -31,6 +31,7 @@ namespace Doppio::Render
 
 		void SetUniform(const std::string& Name, const glm::vec4& Value);
 		void SetUniform(const std::string& Name, int32_t Value);
+		void SetUniform(const std::string& Name, const glm::mat4& Value);
 
 	private:
 		int32_t GetUniformLocation(const std::string& Name);
